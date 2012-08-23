@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <wizard
+            canFinishEarly="false"
+            category="com.android.ide.eclipse.wizards.category"
+            class="it.wallgren.android.platform.NewProjectWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            hasPages="true"
+            icon="res/icon.png"
+            id="it.wallgren.android.platform.projectWizard"
+            name="Android Platform Project"
+            project="true">
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="it.wallgren.android.platform.AndroidClasspathContainerInitializer"
+            id="it.wallgren.android.platform.classpathContainerInitializer">
+      </classpathContainerInitializer>
+   </extension>
+</plugin>
