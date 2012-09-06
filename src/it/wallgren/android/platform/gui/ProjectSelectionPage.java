@@ -146,6 +146,7 @@ public class ProjectSelectionPage extends WizardPage {
                                     item.setText(project.getName());
                                     item.setChecked(project.preSelected());
                                 }
+                                setPageComplete(validatePage());
                                 getShell().pack();
                             }
                         }
