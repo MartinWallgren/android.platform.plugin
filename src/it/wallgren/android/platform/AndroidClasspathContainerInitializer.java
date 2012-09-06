@@ -40,4 +40,9 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
                     container
                 }, new NullProgressMonitor());
     }
+
+    @Override
+    public boolean canUpdateClasspathContainer(IPath containerPath, IJavaProject project) {
+        return true;
+    }
 }
