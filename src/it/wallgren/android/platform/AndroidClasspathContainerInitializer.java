@@ -16,15 +16,19 @@
 
 package it.wallgren.android.platform;
 
+import java.util.HashMap;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IClasspathContainer;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
 public class AndroidClasspathContainerInitializer extends ClasspathContainerInitializer {
+    private static final HashMap<String, IClasspathContainer> CONTAINERS = new HashMap<String, IClasspathContainer>();
 
     public AndroidClasspathContainerInitializer() {
     }
@@ -32,17 +36,46 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
     @Override
     public void initialize(IPath containerPath, IJavaProject project) throws CoreException {
         IPath repoRoot = containerPath.removeFirstSegments(1).makeAbsolute();
-        AndroidClasspathContainer container = new AndroidClasspathContainer(repoRoot);
+        IClasspathContainer container = getAndroidContainer(repoRoot);
         JavaCore.setClasspathContainer(containerPath, new IJavaProject[] {
-            project
+                project
         },
                 new IClasspathContainer[] {
                     container
                 }, new NullProgressMonitor());
     }
 
+    private IClasspathContainer getAndroidContainer(IPath repoRoot) {
+        IClasspathContainer container;
+        synchronized (CONTAINERS) {
+            container = CONTAINERS.get(repoRoot.toString());
+            if (container == null) {
+                container = new AndroidClasspathContainer(repoRoot);
+                CONTAINERS.put(repoRoot.toString(), container);
+            }
+        }
+        return container;
+    }
+
     @Override
     public boolean canUpdateClasspathContainer(IPath containerPath, IJavaProject project) {
         return true;
+    }
+
+    public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject project,
+            IClasspathContainer containerSuggestion) throws CoreException {
+        for (IClasspathEntry entry : containerSuggestion.getClasspathEntries()) {
+            System.out.printf("path=%s, sourceAttachment=%s, sourceAttachmentRoot=%s\n",
+                    entry.getPath(), entry.getSourceAttachmentPath(),
+                    entry.getSourceAttachmentRootPath());
+        }
+        JavaCore.setClasspathContainer(
+                containerPath,
+                new IJavaProject[] {
+                    project
+                }, new IClasspathContainer[] {
+                    containerSuggestion
+                }, new NullProgressMonitor());
+
     }
 }
