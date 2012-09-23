@@ -76,7 +76,10 @@ public class PackagesProject extends AndroidProject {
     private IFolder createLink(IProgressMonitor monitor, IProject project, IPath repoPath)
             throws CoreException {
         final IFolder repoLink = project.getFolder(repoPath.lastSegment());
-
+        if (repoLink.exists()) {
+            // Our work here is already done.
+            return repoLink;
+        }
         // Let's filter out some content we don't need.
         repoLink.createFilter(IResourceFilterDescription.EXCLUDE_ALL
                 | IResourceFilterDescription.FOLDERS | IResourceFilterDescription.INHERITABLE,

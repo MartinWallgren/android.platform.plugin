@@ -50,11 +50,9 @@ public abstract class AndroidProject implements Comparable<AndroidProject> {
 
     protected IProject createProject(String name, IProgressMonitor monitor) throws CoreException {
         project = workspace.getRoot().getProject(name);
-        if (project.exists()) {
-            // TODO: Handle existing projects more graceful
-            project.delete(true, monitor);
+        if (!project.exists()) {
+            project.create(monitor);
         }
-        project.create(monitor);
         project.open(monitor);
 
         return project;

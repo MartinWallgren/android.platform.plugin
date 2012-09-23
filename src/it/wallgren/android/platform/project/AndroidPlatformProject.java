@@ -74,7 +74,10 @@ public class AndroidPlatformProject extends AndroidProject {
     private IFolder createRepoLink(IProgressMonitor monitor, IProject project, IPath repoPath)
             throws CoreException {
         final IFolder repoLink = project.getFolder(repoPath.lastSegment());
-
+        if (repoLink.exists()) {
+            // This is an existing project the link already exists
+            return repoLink;
+        }
         // Let's filter out some content we don't need. To avoid it being
         // indexed
         repoLink.createFilter(IResourceFilterDescription.EXCLUDE_ALL
