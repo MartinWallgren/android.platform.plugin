@@ -28,7 +28,7 @@ import java.util.Set;
  * Class for analyzing a folder and it sub-folders
  */
 public class DirectoryAnalyzer {
-    private FileFilter fileFilter = new FileFilter() {
+    private final FileFilter fileFilter = new FileFilter() {
 
         @Override
         public boolean accept(File path) {
@@ -36,9 +36,9 @@ public class DirectoryAnalyzer {
         }
     };
 
-    private File root;
+    private final File root;
 
-    private Comparator<? super File> fileSortComparator = new Comparator<File>() {
+    private final Comparator<? super File> fileSortComparator = new Comparator<File>() {
         @Override
         public int compare(File o1, File o2) {
             if (o1 != null && o1.isFile()) {
@@ -56,7 +56,7 @@ public class DirectoryAnalyzer {
     }
 
     public Set<File> findJavaSourceDirectories() throws IOException {
-        Set<File> sourceDirectories = new HashSet<File>();
+        final Set<File> sourceDirectories = new HashSet<File>();
         findJavaSourceDirectories(sourceDirectories, root);
         return sourceDirectories;
     }
@@ -71,20 +71,20 @@ public class DirectoryAnalyzer {
         // ...src/bar/foo/File.java
         // has found .../src already
 
-        File[] children = path.listFiles(fileFilter);
+        final File[] children = path.listFiles(fileFilter);
         Arrays.sort(children, fileSortComparator);
-        for (File file : children) {
+        for (final File file : children) {
             if (file.isFile()) {
                 // File filter ensures that this is a Java file
-                File dir = getSourceDirForJavaFile(file);
+                final File dir = getSourceDirForJavaFile(file);
                 if (dir != null) {
                     if (!dir.isDirectory()) {
                         System.err.println(file + " resulted in non dir as java source: " + dir);
                         continue;
                     }
                     out.add(dir);
-                    break; // No need to check the rest of the content in this
-                           // folder
+                    // No need to check the rest of the content in this folder
+                    break;
                 }
             }
             if (file.isDirectory()) {
@@ -94,13 +94,13 @@ public class DirectoryAnalyzer {
     }
 
     private File getSourceDirForJavaFile(File file) throws IOException {
-        JavaFileParser parser = new JavaFileParser(file);
+        final JavaFileParser parser = new JavaFileParser(file);
         parser.parse();
-        String javaPackage = parser.getPackage();
+        final String javaPackage = parser.getPackage();
         if (javaPackage.length() == 0) {
             return file.getParentFile();
         }
-        String dir = file.getParent();
+        final String dir = file.getParent();
         int dirIndex = dir.length() - 1;
         int pkgIndex = javaPackage.length() - 1;
         while (dirIndex > 0 && pkgIndex > 0) {

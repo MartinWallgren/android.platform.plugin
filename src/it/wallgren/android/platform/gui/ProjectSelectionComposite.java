@@ -31,12 +31,12 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 
 public class ProjectSelectionComposite extends Composite {
-    private Table table;
-    private List<CompositeListener> compositeListeners;
+    private final Table table;
+    private final List<CompositeListener> compositeListeners;
 
     /**
      * Create the composite.
-     * 
+     *
      * @param parent
      * @param style
      */
@@ -45,8 +45,8 @@ public class ProjectSelectionComposite extends Composite {
         compositeListeners = new LinkedList<CompositeListener>();
         setLayout(new FormLayout());
 
-        Button btnNone = new Button(this, SWT.BORDER | SWT.FLAT);
-        FormData fd_btnNone = new FormData();
+        final Button btnNone = new Button(this, SWT.BORDER | SWT.FLAT);
+        final FormData fd_btnNone = new FormData();
         fd_btnNone.top = new FormAttachment(0, 10);
         fd_btnNone.right = new FormAttachment(100, -10);
         btnNone.setLayoutData(fd_btnNone);
@@ -64,8 +64,8 @@ public class ProjectSelectionComposite extends Composite {
             }
         });
 
-        Button btnAll = new Button(this, SWT.NONE);
-        FormData fd_btnAll = new FormData();
+        final Button btnAll = new Button(this, SWT.NONE);
+        final FormData fd_btnAll = new FormData();
         fd_btnAll.right = new FormAttachment(btnNone, -6);
         fd_btnAll.top = new FormAttachment(0, 10);
         btnAll.setLayoutData(fd_btnAll);
@@ -83,7 +83,7 @@ public class ProjectSelectionComposite extends Composite {
             }
         });
         table = new Table(this, SWT.BORDER | SWT.CHECK | SWT.FULL_SELECTION | SWT.HIDE_SELECTION);
-        FormData fd_table = new FormData();
+        final FormData fd_table = new FormData();
         fd_table.bottom = new FormAttachment(100, -10);
         fd_table.right = new FormAttachment(100, -10);
         fd_table.top = new FormAttachment(btnNone, 10);
@@ -105,8 +105,8 @@ public class ProjectSelectionComposite extends Composite {
     }
 
     protected void setCheckedForAll(boolean checked) {
-        TableItem[] items = table.getItems();
-        for (TableItem tableItem : items) {
+        final TableItem[] items = table.getItems();
+        for (final TableItem tableItem : items) {
             tableItem.setChecked(checked);
         }
         notifyListeners();
@@ -129,7 +129,7 @@ public class ProjectSelectionComposite extends Composite {
     }
 
     private void notifyListeners() {
-        for (CompositeListener listener : compositeListeners) {
+        for (final CompositeListener listener : compositeListeners) {
             listener.onCompositeChanged();
         }
     }

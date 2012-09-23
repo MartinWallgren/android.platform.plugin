@@ -74,8 +74,8 @@ public class ProjectSelectionPage extends WizardPage {
     }
 
     private boolean validatePage() {
-        TableItem[] items = composite.getItems();
-        for (TableItem tableItem : items) {
+        final TableItem[] items = composite.getItems();
+        for (final TableItem tableItem : items) {
             // We need at least one selected project
             if (tableItem.getChecked()) {
                 return true;
@@ -97,7 +97,7 @@ public class ProjectSelectionPage extends WizardPage {
             getContainer().run(true, false, new IRunnableWithProgress() {
                 @Override
                 public void run(IProgressMonitor monitor) throws InvocationTargetException,
-                        InterruptedException {
+                InterruptedException {
                     synchronized (projects) {
                         // monitor.beginTask("Creating projects",
                         // packagesProjects.size() + 1);
@@ -110,21 +110,21 @@ public class ProjectSelectionPage extends WizardPage {
                         // for some of the genrated projects. Probably not worth
                         // it
                         final List<IPath> packagesProjects = findPackagesProjects();
-                        for (IPath path : packagesProjects) {
+                        for (final IPath path : packagesProjects) {
                             monitor.subTask(path.lastSegment());
-                            AndroidMkAnalyzer analyzer = new AndroidMkAnalyzer(state.getRepoPath()
+                            final AndroidMkAnalyzer analyzer = new AndroidMkAnalyzer(state.getRepoPath()
                                     .toFile(), new File(path.toFile(), "Android.mk"));
                             try {
                                 analyzer.parse();
-                            } catch (IOException e) {
+                            } catch (final IOException e) {
                                 e.printStackTrace();
                                 continue; // Skip the failing package
                             }
-                            String packageName = analyzer.getPackageName();
-                            File outDirectory = analyzer.getOutDirectory();
+                            final String packageName = analyzer.getPackageName();
+                            final File outDirectory = analyzer.getOutDirectory();
                             if (outDirectory == null || packageName == null) {
                                 continue; // Skip this package, it does not seem
-                                          // complete
+                                // complete
                             }
                             projects.add(new PackagesProject(path, state.getRepoPath(),
                                     packageName, outDirectory));
@@ -141,8 +141,8 @@ public class ProjectSelectionPage extends WizardPage {
                         @Override
                         public void run() {
                             synchronized (projects) {
-                                for (AndroidProject project : projects) {
-                                    TableItem item = composite.createTableItem();
+                                for (final AndroidProject project : projects) {
+                                    final TableItem item = composite.createTableItem();
                                     item.setText(project.getName());
                                     item.setChecked(project.preSelected());
                                 }
@@ -153,23 +153,23 @@ public class ProjectSelectionPage extends WizardPage {
                     });
                 }
             });
-        } catch (Exception e1) {
+        } catch (final Exception e1) {
             // TODO: Better error handling if project creation fail
             e1.printStackTrace();
         }
     }
 
     private List<IPath> findPackagesProjects() {
-        LinkedList<IPath> folders = new LinkedList<IPath>();
-        File packages = new File(state.getRepoPath().toFile(), "packages");
-        for (File folder : packages.listFiles()) {
+        final LinkedList<IPath> folders = new LinkedList<IPath>();
+        final File packages = new File(state.getRepoPath().toFile(), "packages");
+        for (final File folder : packages.listFiles()) {
             // TODO: experimental is usually not built when building the rest of
             // the platorm. How
             // should we treat them? Don't include them for now
 
             // folder = apps experimental inputmethods providers wallpapers...
             if (folder.isDirectory() && !"experimental".equals(folder.getName())) {
-                for (File projectFolder : folder.listFiles()) {
+                for (final File projectFolder : folder.listFiles()) {
                     // projectFolder = .../packages/apps/* ...
                     if (projectFolder.isDirectory()
                             && new File(projectFolder, "Android.mk").exists()) {
@@ -183,9 +183,9 @@ public class ProjectSelectionPage extends WizardPage {
 
     public List<AndroidProject> getSelectedProjects() {
         synchronized (projects) {
-            ArrayList<AndroidProject> selectedProjects = new ArrayList<AndroidProject>(
+            final ArrayList<AndroidProject> selectedProjects = new ArrayList<AndroidProject>(
                     projects.size());
-            TableItem[] items = composite.getItems();
+            final TableItem[] items = composite.getItems();
             for (int i = 0; i < items.length; i++) {
                 if (items[i].getChecked()) {
                     selectedProjects.add(projects.get(i));

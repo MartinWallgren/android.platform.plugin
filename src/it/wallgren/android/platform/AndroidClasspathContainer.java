@@ -54,15 +54,15 @@ public class AndroidClasspathContainer implements IClasspathContainer {
         // TODO: Update entries when jars get added to the file system.
         synchronized (lock) {
             if (entries == null) {
-                List<File> libs = getAndroidDependenceisFile(repoRoot);
+                final List<File> libs = getAndroidDependenceisFile(repoRoot);
                 entries = new IClasspathEntry[libs.size()];
                 int i = 0;
-                for (File jar : libs) {
+                for (final File jar : libs) {
                     entries[i++] = JavaCore
                             .newLibraryEntry(new Path(jar.getAbsolutePath()), null, null);
                 }
             }
-            IClasspathEntry[] out = new IClasspathEntry[entries.length];
+            final IClasspathEntry[] out = new IClasspathEntry[entries.length];
             System.arraycopy(entries, 0, out, 0, out.length);
             return out;
         }
@@ -75,7 +75,7 @@ public class AndroidClasspathContainer implements IClasspathContainer {
     }
 
     private List<File> getAndroidDependenceisFile(IPath repoRoot) {
-        LinkedList<File> jars = new LinkedList<File>();
+        final LinkedList<File> jars = new LinkedList<File>();
         findJavaLibs(repoRoot.append("/out/target/common/obj/JAVA_LIBRARIES/").toFile(), FILTER,
                 jars);
         return jars;
@@ -83,7 +83,7 @@ public class AndroidClasspathContainer implements IClasspathContainer {
 
     /**
      * Recursive search for java libraries (i.e classes.jar)
-     * 
+     *
      * @param path
      * @param filter items in the filter will not be added to the result
      * @param out
@@ -96,7 +96,7 @@ public class AndroidClasspathContainer implements IClasspathContainer {
             if (path.getName().equals("emma_out")) {
                 return;
             }
-            for (File child : path.listFiles()) {
+            for (final File child : path.listFiles()) {
                 findJavaLibs(child, filter, out);
             }
         }
@@ -106,7 +106,7 @@ public class AndroidClasspathContainer implements IClasspathContainer {
     }
 
     private boolean isFiltered(List<String> filter, String name) {
-        for (String string : filter) {
+        for (final String string : filter) {
             if (name.startsWith(string)) {
                 return true;
             }

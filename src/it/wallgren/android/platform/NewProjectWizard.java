@@ -67,25 +67,25 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             getContainer().run(false, true, new IRunnableWithProgress() {
                 @Override
                 public void run(IProgressMonitor monitor) throws InvocationTargetException,
-                        InterruptedException {
+                InterruptedException {
                     try {
-                        List<AndroidProject> projects = page2.getSelectedProjects();
+                        final List<AndroidProject> projects = page2.getSelectedProjects();
                         monitor.beginTask("Creating projects", projects.size());
-                        for (AndroidProject androidProject : projects) {
+                        for (final AndroidProject androidProject : projects) {
                             monitor.subTask(androidProject.getName());
                             androidProject.create(monitor);
                             monitor.worked(1);
                         }
                         monitor.done();
-                    } catch (CoreException e) {
+                    } catch (final CoreException e) {
                         throw new InvocationTargetException(e);
                     }
                 }
             });
-        } catch (Exception e1) {
+        } catch (final Exception e1) {
             // TODO: Better error handling
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
+            final StringWriter sw = new StringWriter();
+            final PrintWriter pw = new PrintWriter(sw);
             e1.getCause().printStackTrace(pw);
             page2.setErrorMessage(sw.toString());
             e1.printStackTrace();

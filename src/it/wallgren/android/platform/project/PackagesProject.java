@@ -34,10 +34,10 @@ import org.eclipse.jdt.core.JavaCore;
 
 public class PackagesProject extends AndroidProject {
     private static String FILE_FILTER_ID = "org.eclipse.ui.ide.patternFilterMatcher";
-    private IPath root;
-    private String projectName;
-    private IPath repoPath;
-    private File outDir;
+    private final IPath root;
+    private final String projectName;
+    private final IPath repoPath;
+    private final File outDir;
 
     public PackagesProject(IPath root, IPath repoPath, String packageName, File outDir) {
         this.root = root;
@@ -58,14 +58,14 @@ public class PackagesProject extends AndroidProject {
 
     @Override
     public void doCreate(IProgressMonitor monitor) throws CoreException {
-        IProject project = createProject(projectName, monitor);
-        IFolder link = createLink(monitor, project, root);
+        final IProject project = createProject(projectName, monitor);
+        final IFolder link = createLink(monitor, project, root);
 
-        IClasspathEntry[] srcFolders = getSourceFolders(project, link, monitor);
-        IClasspathEntry[] pkgLibs = getPackageDependencies();
-        IClasspathEntry platform = getPlatformDependenceis(repoPath);
+        final IClasspathEntry[] srcFolders = getSourceFolders(project, link, monitor);
+        final IClasspathEntry[] pkgLibs = getPackageDependencies();
+        final IClasspathEntry platform = getPlatformDependenceis(repoPath);
 
-        IClasspathEntry[] classPath = new IClasspathEntry[srcFolders.length + pkgLibs.length + 1];
+        final IClasspathEntry[] classPath = new IClasspathEntry[srcFolders.length + pkgLibs.length + 1];
         System.arraycopy(srcFolders, 0, classPath, 0, srcFolders.length);
         System.arraycopy(pkgLibs, 0, classPath, srcFolders.length, pkgLibs.length);
         classPath[classPath.length - 1] = platform;
@@ -75,7 +75,7 @@ public class PackagesProject extends AndroidProject {
 
     private IFolder createLink(IProgressMonitor monitor, IProject project, IPath repoPath)
             throws CoreException {
-        IFolder repoLink = project.getFolder(repoPath.lastSegment());
+        final IFolder repoLink = project.getFolder(repoPath.lastSegment());
 
         // Let's filter out some content we don't need.
         repoLink.createFilter(IResourceFilterDescription.EXCLUDE_ALL
@@ -94,15 +94,15 @@ public class PackagesProject extends AndroidProject {
     }
 
     private IClasspathEntry[] getPackageDependencies() {
-        File[] jars = outDir.listFiles(new FileFilter() {
+        final File[] jars = outDir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
                 return pathname.getAbsolutePath().endsWith(".jar");
             }
         });
-        IClasspathEntry[] entries = new IClasspathEntry[jars.length];
+        final IClasspathEntry[] entries = new IClasspathEntry[jars.length];
         int i = 0;
-        for (File file : jars) {
+        for (final File file : jars) {
             entries[i++] = JavaCore.newLibraryEntry(new Path(file.getAbsolutePath()), null, null);
         }
         return entries;
@@ -110,10 +110,10 @@ public class PackagesProject extends AndroidProject {
 
     private IClasspathEntry[] getSourceFolders(IProject project, IFolder link,
             IProgressMonitor monitor) throws CoreException {
-        List<IPath> files = getJavaSourceFolders(link);
-        IClasspathEntry[] classPathEntries = new IClasspathEntry[files.size()];
+        final List<IPath> files = getJavaSourceFolders(link);
+        final IClasspathEntry[] classPathEntries = new IClasspathEntry[files.size()];
         int i = 0;
-        for (IPath folder : files) {
+        for (final IPath folder : files) {
             classPathEntries[i] = JavaCore.newSourceEntry(folder);
             i++;
         }
@@ -124,7 +124,7 @@ public class PackagesProject extends AndroidProject {
     private List<IPath> getJavaSourceFolders(IFolder link) {
         // TODO: Lookup all relevant java sources automagically (via Android.mk
         // or some other way)
-        List<IPath> srcFolders = new LinkedList<IPath>();
+        final List<IPath> srcFolders = new LinkedList<IPath>();
 
         File srcFile = link.getRawLocation().append("src").toFile();
         if (srcFile.isDirectory()) {

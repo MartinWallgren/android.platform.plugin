@@ -38,7 +38,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
 
     @Override
     public void initialize(IPath containerPath, IJavaProject project) throws CoreException {
-        IClasspathContainer container = getAndroidContainer(containerPath, project);
+        final IClasspathContainer container = getAndroidContainer(containerPath, project);
         JavaCore.setClasspathContainer(containerPath, new IJavaProject[] {
                 project
         },
@@ -71,7 +71,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
     @Override
     public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject project,
             IClasspathContainer containerSuggestion) throws CoreException {
-        AndroidClasspathContainer container = getAndroidContainer(containerPath, project);
+        final AndroidClasspathContainer container = getAndroidContainer(containerPath, project);
         container.setEntries(containerSuggestion.getClasspathEntries());
         JavaCore.setClasspathContainer(
                 containerPath,
@@ -82,26 +82,26 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
                 }, new NullProgressMonitor());
         try {
             persistClasspathContainer(project, container);
-        } catch (CoreException e) {
+        } catch (final CoreException e) {
             e.printStackTrace();
         }
     }
 
     /**
      * Persist relevant parts of the container for future sessions
-     * 
+     *
      * @param containerPath
      * @param container
      * @throws CoreException
      */
     private void persistClasspathContainer(IJavaProject project, IClasspathContainer container)
             throws CoreException {
-        IClasspathEntry[] entries = container.getClasspathEntries();
+        final IClasspathEntry[] entries = container.getClasspathEntries();
         for (int i = 0; i < entries.length; i++) {
-            IClasspathEntry entry = entries[i];
-            QualifiedName qname = new QualifiedName(container.getPath().toString(),
+            final IClasspathEntry entry = entries[i];
+            final QualifiedName qname = new QualifiedName(container.getPath().toString(),
                     "IClasspathEntry." + i);
-            String encodedClasspathEntry = project.encodeClasspathEntry(entry);
+            final String encodedClasspathEntry = project.encodeClasspathEntry(entry);
             ResourcesPlugin.getWorkspace().getRoot()
             .setPersistentProperty(qname, encodedClasspathEntry);
         }
@@ -109,13 +109,13 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
 
     private AndroidClasspathContainer loadClasspathContainer(IJavaProject project,
             IPath containerPath) {
-        AndroidClasspathContainer container = new AndroidClasspathContainer(containerPath);
-        LinkedList<IClasspathEntry> entries = new LinkedList<IClasspathEntry>();
+        final AndroidClasspathContainer container = new AndroidClasspathContainer(containerPath);
+        final LinkedList<IClasspathEntry> entries = new LinkedList<IClasspathEntry>();
         IClasspathEntry entry = null;
         int i = 0;
         try {
             do {
-                QualifiedName qname = new QualifiedName(container.getPath().toString(),
+                final QualifiedName qname = new QualifiedName(container.getPath().toString(),
                         "IClasspathEntry." + i);
                 entry = project.decodeClasspathEntry(ResourcesPlugin.getWorkspace().getRoot()
                         .getPersistentProperty(qname));
@@ -127,7 +127,7 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
             if (entries.size() > 0) {
                 container.setEntries(entries.toArray(new IClasspathEntry[entries.size()]));
             }
-        } catch (CoreException e) {
+        } catch (final CoreException e) {
             // We'll recreate the paths later, but manual classpath changes will
             // be lost (like source and javadoc attachments)
             e.printStackTrace();

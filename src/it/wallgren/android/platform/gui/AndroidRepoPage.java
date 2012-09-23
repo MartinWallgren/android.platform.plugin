@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 
 public class AndroidRepoPage extends WizardPage {
     private String repoName;
-    private ProjectCreationState state;
+    private final ProjectCreationState state;
     private AndroidRepoComposite composite;
 
     public AndroidRepoPage(ProjectCreationState state, String pageName) {
@@ -65,17 +65,17 @@ public class AndroidRepoPage extends WizardPage {
 
     private boolean validatePage() {
         setErrorMessage(null);
-        IPath repoPath = getRepoPath();
+        final IPath repoPath = getRepoPath();
         return isAndroidRepo(repoPath) && isAndroidRepoCompiled(repoPath);
     }
 
     private boolean isAndroidRepoCompiled(IPath repoPath) {
         // Just check if the JAVA_LIBRARIES and the APP folder
         // exists since they are what we depend on
-        String root = repoPath.toOSString();
-        File javaLib = new File(root, "out/target/common/obj/JAVA_LIBRARIES");
-        File appLib = new File(root, "out/target/common/obj/APPS");
-        boolean valid = javaLib.isDirectory() && appLib.isDirectory();
+        final String root = repoPath.toOSString();
+        final File javaLib = new File(root, "out/target/common/obj/JAVA_LIBRARIES");
+        final File appLib = new File(root, "out/target/common/obj/APPS");
+        final boolean valid = javaLib.isDirectory() && appLib.isDirectory();
         if (!valid) {
             setErrorMessage(repoPath
                     + " does not seem to be compiled. You need to build your android repo at least"
@@ -88,7 +88,7 @@ public class AndroidRepoPage extends WizardPage {
         if (repoPath == null || repoPath.isEmpty()) {
             return false;
         }
-        File root = repoPath.toFile();
+        final File root = repoPath.toFile();
         if (new File(root, ".repo").isDirectory()) {
             return true;
         }

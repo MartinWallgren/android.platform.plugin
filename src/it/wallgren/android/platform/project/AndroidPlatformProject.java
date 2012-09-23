@@ -40,8 +40,8 @@ import org.eclipse.jdt.core.JavaCore;
 public class AndroidPlatformProject extends AndroidProject {
     private static String FILE_FILTER_ID = "org.eclipse.ui.ide.patternFilterMatcher";
 
-    private IPath repoPath;
-    private String projectName;
+    private final IPath repoPath;
+    private final String projectName;
 
     public AndroidPlatformProject(IPath repoPath) {
         this.repoPath = repoPath;
@@ -60,12 +60,12 @@ public class AndroidPlatformProject extends AndroidProject {
 
     @Override
     public void doCreate(IProgressMonitor monitor) throws CoreException {
-        IProject project = createProject(projectName, monitor);
+        final IProject project = createProject(projectName, monitor);
 
-        IFolder repoLink = createRepoLink(monitor, project, repoPath);
+        final IFolder repoLink = createRepoLink(monitor, project, repoPath);
 
-        IClasspathEntry[] srcFolders = getSourceFolders(project, repoLink, monitor);
-        IClasspathEntry[] classPath = new IClasspathEntry[srcFolders.length + 1];
+        final IClasspathEntry[] srcFolders = getSourceFolders(project, repoLink, monitor);
+        final IClasspathEntry[] classPath = new IClasspathEntry[srcFolders.length + 1];
         System.arraycopy(srcFolders, 0, classPath, 0, srcFolders.length);
         classPath[srcFolders.length] = getAndroidDependenceis(repoPath);
         addJavaNature(classPath, monitor);
@@ -73,7 +73,7 @@ public class AndroidPlatformProject extends AndroidProject {
 
     private IFolder createRepoLink(IProgressMonitor monitor, IProject project, IPath repoPath)
             throws CoreException {
-        IFolder repoLink = project.getFolder(repoPath.lastSegment());
+        final IFolder repoLink = project.getFolder(repoPath.lastSegment());
 
         // Let's filter out some content we don't need. To avoid it being
         // indexed
@@ -82,25 +82,25 @@ public class AndroidPlatformProject extends AndroidProject {
                 new FileInfoMatcherDescription(FILE_FILTER_ID, "bin"), 0, monitor);
         repoLink.createFilter(IResourceFilterDescription.EXCLUDE_ALL
                 | IResourceFilterDescription.FOLDERS, new FileInfoMatcherDescription(
-                FILE_FILTER_ID, ".repo"), 0, monitor);
+                        FILE_FILTER_ID, ".repo"), 0, monitor);
         repoLink.createFilter(IResourceFilterDescription.EXCLUDE_ALL
                 | IResourceFilterDescription.FOLDERS | IResourceFilterDescription.INHERITABLE,
                 new FileInfoMatcherDescription(FILE_FILTER_ID, ".git"), 0, monitor);
         // repoLink.createFilter(IResourceFilterDescription.EXCLUDE_ALL
         // | IResourceFilterDescription.FOLDERS, new FileInfoMatcherDescription(
         // FILE_FILTER_ID, "out"), 0, monitor);
-        IFolder out = repoLink.getFolder("out");
+        final IFolder out = repoLink.getFolder("out");
         // Only allow target/common/R in the out folder
-        int filterFlags = IResourceFilterDescription.INCLUDE_ONLY
+        final int filterFlags = IResourceFilterDescription.INCLUDE_ONLY
                 | IResourceFilterDescription.FOLDERS | IResourceFilterDescription.FILES;
         out.createFilter(filterFlags, new FileInfoMatcherDescription(FILE_FILTER_ID, "target"), 0,
                 monitor);
 
-        IFolder target = out.getFolder("target");
+        final IFolder target = out.getFolder("target");
         target.createFilter(filterFlags, new FileInfoMatcherDescription(FILE_FILTER_ID, "common"),
                 0, monitor);
 
-        IFolder common = target.getFolder("common");
+        final IFolder common = target.getFolder("common");
         common.createFilter(filterFlags, new FileInfoMatcherDescription(FILE_FILTER_ID, "R"), 0,
                 monitor);
         repoLink.createLink(repoPath, 0, monitor);
@@ -116,9 +116,9 @@ public class AndroidPlatformProject extends AndroidProject {
 
     private IClasspathEntry[] getSourceFolders(IProject project, IFolder repoLink,
             IProgressMonitor monitor) throws CoreException {
-        List<IPath> files = getJavaSourceFolders(repoLink);
-        LinkedList<IClasspathEntry> entries = new LinkedList<IClasspathEntry>();
-        for (IPath folder : files) {
+        final List<IPath> files = getJavaSourceFolders(repoLink);
+        final LinkedList<IClasspathEntry> entries = new LinkedList<IClasspathEntry>();
+        for (final IPath folder : files) {
             if (folder.toString().contains("tools") || folder.toString().contains("tests")) {
                 // Ugly hack to skip tools and test folders
                 continue;
@@ -129,18 +129,18 @@ public class AndroidPlatformProject extends AndroidProject {
     }
 
     private List<IPath> getJavaSourceFolders(IFolder repoLink) {
-        List<IPath> srcFolders = new LinkedList<IPath>();
-        DirectoryAnalyzer da = new DirectoryAnalyzer(new File(repoLink.getRawLocation().toFile(),
+        final List<IPath> srcFolders = new LinkedList<IPath>();
+        final DirectoryAnalyzer da = new DirectoryAnalyzer(new File(repoLink.getRawLocation().toFile(),
                 "frameworks/base"));
         try {
-            Set<File> javaSources = da.findJavaSourceDirectories();
-            int startPos = repoPath.toOSString().length();
-            for (File file : javaSources) {
-                IPath path = repoLink.getFullPath().append(
+            final Set<File> javaSources = da.findJavaSourceDirectories();
+            final int startPos = repoPath.toOSString().length();
+            for (final File file : javaSources) {
+                final IPath path = repoLink.getFullPath().append(
                         file.getAbsolutePath().substring(startPos));
                 srcFolders.add(path);
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             e.printStackTrace();
         }
         srcFolders.add(repoLink.getFullPath().append("libcore/luni/src/main/java"));

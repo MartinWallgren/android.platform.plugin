@@ -30,9 +30,9 @@ public class AndroidMkAnalyzer {
     private static final String BUILD_INCLUDE_APPS = "include $(BUILD_PACKAGE)";
     private static final String BUILD_INCLUDE_JAVA_LIBRARY = "include $(BUILD_PACKAGE)";
 
-    private File makeFile;
+    private final File makeFile;
     private String packageName;
-    private File repoRoot;
+    private final File repoRoot;
     private File outDir;
 
     public AndroidMkAnalyzer(File repoRoot, File makeFile) {
@@ -48,10 +48,10 @@ public class AndroidMkAnalyzer {
 
     public void parse() throws IOException {
         packageName = null;
-        LineNumberReader reader = new LineNumberReader(new FileReader(makeFile));
+        final LineNumberReader reader = new LineNumberReader(new FileReader(makeFile));
         String line;
         while ((line = reader.readLine()) != null) {
-            String[] tokens = line.split("\\s*[:+]=\\s*");
+            final String[] tokens = line.split("\\s*[:+]=\\s*");
             if (tokens.length > 1) {
                 if (PACKAGE_NAME.equals(tokens[0])) {
                     packageName = tokens[1];

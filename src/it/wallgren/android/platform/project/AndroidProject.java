@@ -67,15 +67,16 @@ public abstract class AndroidProject implements Comparable<AndroidProject> {
                     "Project must be created before giving it a Java nature");
         }
 
-        IProjectDescription description = project.getDescription();
-        String[] natures = description.getNatureIds();
-        String[] newNatures = Arrays.copyOf(natures, natures.length + 1);
+        final IProjectDescription description = project.getDescription();
+        final String[] natures = description.getNatureIds();
+        final String[] newNatures = Arrays.copyOf(natures, natures.length + 1);
         newNatures[natures.length] = JavaCore.NATURE_ID;
         description.setNatureIds(newNatures);
         project.setDescription(description, null);
-        IJavaProject javaProject = JavaCore.create(project);
+        final IJavaProject javaProject = JavaCore.create(project);
 
         @SuppressWarnings("rawtypes")
+        final
         Map options = javaProject.getOptions(true);
         // Compliance level need to be 1.6
         JavaCore.setComplianceOptions(JavaCore.VERSION_1_6, options);
@@ -89,7 +90,7 @@ public abstract class AndroidProject implements Comparable<AndroidProject> {
         boolean autobuild = workspace.isAutoBuilding();
         if (autobuild) {
             // Disable auto build during project setup.
-            IWorkspaceDescription wsDescription = workspace.getDescription();
+            final IWorkspaceDescription wsDescription = workspace.getDescription();
             autobuild = wsDescription.isAutoBuilding();
             wsDescription.setAutoBuilding(false);
             workspace.setDescription(wsDescription);
@@ -97,7 +98,7 @@ public abstract class AndroidProject implements Comparable<AndroidProject> {
         doCreate(monitor);
         if (autobuild) {
             // re-enable auto build
-            IWorkspaceDescription wsDescription = workspace.getDescription();
+            final IWorkspaceDescription wsDescription = workspace.getDescription();
             wsDescription.setAutoBuilding(true);
             workspace.setDescription(wsDescription);
         }

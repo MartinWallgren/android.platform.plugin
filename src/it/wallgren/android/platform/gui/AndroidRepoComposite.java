@@ -18,12 +18,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 public class AndroidRepoComposite extends Composite {
-    private Text text;
-    private List<CompositeListener> compositeListeners;
+    private final Text text;
+    private final List<CompositeListener> compositeListeners;
 
     /**
      * Create the composite.
-     * 
+     *
      * @param parent
      * @param style
      */
@@ -32,7 +32,7 @@ public class AndroidRepoComposite extends Composite {
         compositeListeners = new LinkedList<CompositeListener>();
         setLayout(new GridLayout(3, false));
 
-        Label lblAndroidRepo = new Label(this, SWT.NONE);
+        final Label lblAndroidRepo = new Label(this, SWT.NONE);
         lblAndroidRepo.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
         lblAndroidRepo.setText("Android Repo");
 
@@ -42,7 +42,7 @@ public class AndroidRepoComposite extends Composite {
         text.addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e) {
-                String path = text.getText();
+                final String path = text.getText();
                 if (path.contains("~")) {
                     text.removeModifyListener(this);
                     text.setText("");
@@ -53,13 +53,13 @@ public class AndroidRepoComposite extends Composite {
             }
         });
 
-        Button btnBrowse = new Button(this, SWT.NONE);
+        final Button btnBrowse = new Button(this, SWT.NONE);
         btnBrowse.setText("Browse");
         btnBrowse.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                DirectoryDialog dialog = new DirectoryDialog(getShell(), SWT.NULL);
-                String path = dialog.open();
+                final DirectoryDialog dialog = new DirectoryDialog(getShell(), SWT.NULL);
+                final String path = dialog.open();
                 if (path != null) {
                     text.setText(path);
                 }
@@ -81,7 +81,7 @@ public class AndroidRepoComposite extends Composite {
     }
 
     private void notifyListeners() {
-        for (CompositeListener listener : compositeListeners) {
+        for (final CompositeListener listener : compositeListeners) {
             listener.onCompositeChanged();
         }
     }

@@ -40,7 +40,7 @@ public class JavaFileParser {
 
     // use ASTParse to parse string
     public void parse() throws IOException {
-        ASTParser parser = ASTParser.newParser(AST.JLS3);
+        final ASTParser parser = ASTParser.newParser(AST.JLS3);
         parser.setSource(readFileToString().toCharArray());
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
 
@@ -51,25 +51,22 @@ public class JavaFileParser {
     }
 
     private String readFileToString() throws IOException {
-        FileInputStream in = new FileInputStream(javaFile);
-        FileChannel fc = in.getChannel();
-        ByteBuffer buf = ByteBuffer.allocate(8192);
+        final FileInputStream in = new FileInputStream(javaFile);
+        final FileChannel fc = in.getChannel();
+        final ByteBuffer buf = ByteBuffer.allocate(8192);
 
         if (fc.size() > Integer.MAX_VALUE) {
             // This is a crazy size for a java source file, you deserve to fail.
             throw new IOException(javaFile + " to large to parse");
         }
 
-        StringBuilder sb = new StringBuilder((int) fc.size());
-        Charset cs = Charset.forName("UTF-8"); // TODO: Make sure that the
-                                               // entire world settles on
-                                               // one encoding and that every
-                                               // file in existance is
-                                               // re-encoded.
-
+        final StringBuilder sb = new StringBuilder((int) fc.size());
+        // TODO: Make sure that the entire world settles on one encoding and
+        // that every file in existance is re-encoded.
+        final Charset cs = Charset.forName("UTF-8");
         while (fc.read(buf) != -1) {
             buf.rewind();
-            CharBuffer chbuf = cs.decode(buf);
+            final CharBuffer chbuf = cs.decode(buf);
             sb.append(chbuf.array());
             buf.clear();
         }
