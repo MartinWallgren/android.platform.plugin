@@ -25,6 +25,9 @@ import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceDescription;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -68,7 +71,16 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 @Override
                 public void run(IProgressMonitor monitor) throws InvocationTargetException,
                 InterruptedException {
+                    final IWorkspace workspace = ResourcesPlugin.getWorkspace();
+                    boolean autobuild = workspace.isAutoBuilding();
                     try {
+                        if (autobuild) {
+                            // Disable auto build during project setup.
+                            final IWorkspaceDescription wsDescription = workspace.getDescription();
+                            autobuild = wsDescription.isAutoBuilding();
+                            wsDescription.setAutoBuilding(false);
+                            workspace.setDescription(wsDescription);
+                        }
                         final List<AndroidProject> projects = page2.getSelectedProjects();
                         monitor.beginTask("Creating projects", projects.size());
                         for (final AndroidProject androidProject : projects) {
@@ -77,6 +89,12 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                             monitor.worked(1);
                         }
                         monitor.done();
+                        if (autobuild) {
+                            // re-enable auto build
+                            final IWorkspaceDescription wsDescription = workspace.getDescription();
+                            wsDescription.setAutoBuilding(true);
+                            workspace.setDescription(wsDescription);
+                        }
                     } catch (final CoreException e) {
                         throw new InvocationTargetException(e);
                     }

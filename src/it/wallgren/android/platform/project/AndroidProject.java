@@ -22,7 +22,6 @@ import java.util.Map;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.IWorkspaceDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -84,22 +83,7 @@ public abstract class AndroidProject implements Comparable<AndroidProject> {
     }
 
     public final void create(IProgressMonitor monitor) throws CoreException {
-
-        boolean autobuild = workspace.isAutoBuilding();
-        if (autobuild) {
-            // Disable auto build during project setup.
-            final IWorkspaceDescription wsDescription = workspace.getDescription();
-            autobuild = wsDescription.isAutoBuilding();
-            wsDescription.setAutoBuilding(false);
-            workspace.setDescription(wsDescription);
-        }
         doCreate(monitor);
-        if (autobuild) {
-            // re-enable auto build
-            final IWorkspaceDescription wsDescription = workspace.getDescription();
-            wsDescription.setAutoBuilding(true);
-            workspace.setDescription(wsDescription);
-        }
     }
 
     public abstract boolean preSelected();
