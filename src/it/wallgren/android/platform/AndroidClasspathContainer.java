@@ -28,13 +28,13 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 
 public class AndroidClasspathContainer implements IClasspathContainer {
-    private IPath repoRoot;
+    private final IPath repoRoot;
 
     private IClasspathEntry[] entries;
     private final Object lock = new Object();
 
     /**
-     * Filter for libraries that should not be added to the classpath. 
+     * Filter for libraries that should not be added to the classpath.
      *
      * Note! The filter is applied with a starts with match.
      */
@@ -65,6 +65,12 @@ public class AndroidClasspathContainer implements IClasspathContainer {
             IClasspathEntry[] out = new IClasspathEntry[entries.length];
             System.arraycopy(entries, 0, out, 0, out.length);
             return out;
+        }
+    }
+
+    public void setEntries(IClasspathEntry[] entries) {
+        synchronized (lock) {
+            this.entries = entries;
         }
     }
 

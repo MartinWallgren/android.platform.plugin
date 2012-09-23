@@ -17,10 +17,13 @@
 package it.wallgren.android.platform;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -28,30 +31,33 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
 public class AndroidClasspathContainerInitializer extends ClasspathContainerInitializer {
-    private static final HashMap<String, IClasspathContainer> CONTAINERS = new HashMap<String, IClasspathContainer>();
+    private static final HashMap<String, AndroidClasspathContainer> CONTAINERS = new HashMap<String, AndroidClasspathContainer>();
 
     public AndroidClasspathContainerInitializer() {
     }
 
     @Override
     public void initialize(IPath containerPath, IJavaProject project) throws CoreException {
-        IPath repoRoot = containerPath.removeFirstSegments(1).makeAbsolute();
-        IClasspathContainer container = getAndroidContainer(repoRoot);
+        IClasspathContainer container = getAndroidContainer(containerPath, project);
         JavaCore.setClasspathContainer(containerPath, new IJavaProject[] {
                 project
         },
-                new IClasspathContainer[] {
-                    container
-                }, new NullProgressMonitor());
+        new IClasspathContainer[] {
+                container
+        }, new NullProgressMonitor());
     }
 
-    private IClasspathContainer getAndroidContainer(IPath repoRoot) {
-        IClasspathContainer container;
+    private IPath getRepoRoot(IPath containerPath) {
+        return containerPath.removeFirstSegments(1).makeAbsolute();
+    }
+
+    private AndroidClasspathContainer getAndroidContainer(IPath containerPath, IJavaProject project) {
+        AndroidClasspathContainer container;
         synchronized (CONTAINERS) {
-            container = CONTAINERS.get(repoRoot.toString());
+            container = CONTAINERS.get(containerPath.toString());
             if (container == null) {
-                container = new AndroidClasspathContainer(repoRoot);
-                CONTAINERS.put(repoRoot.toString(), container);
+                container = loadClasspathContainer(project, getRepoRoot(containerPath));
+                CONTAINERS.put(containerPath.toString(), container);
             }
         }
         return container;
@@ -62,20 +68,70 @@ public class AndroidClasspathContainerInitializer extends ClasspathContainerInit
         return true;
     }
 
+    @Override
     public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject project,
             IClasspathContainer containerSuggestion) throws CoreException {
-        for (IClasspathEntry entry : containerSuggestion.getClasspathEntries()) {
-            System.out.printf("path=%s, sourceAttachment=%s, sourceAttachmentRoot=%s\n",
-                    entry.getPath(), entry.getSourceAttachmentPath(),
-                    entry.getSourceAttachmentRootPath());
-        }
+        AndroidClasspathContainer container = getAndroidContainer(containerPath, project);
+        container.setEntries(containerSuggestion.getClasspathEntries());
         JavaCore.setClasspathContainer(
                 containerPath,
                 new IJavaProject[] {
-                    project
+                        project
                 }, new IClasspathContainer[] {
-                    containerSuggestion
+                        containerSuggestion
                 }, new NullProgressMonitor());
+        try {
+            persistClasspathContainer(project, container);
+        } catch (CoreException e) {
+            e.printStackTrace();
+        }
+    }
 
+    /**
+     * Persist relevant parts of the container for future sessions
+     * 
+     * @param containerPath
+     * @param container
+     * @throws CoreException
+     */
+    private void persistClasspathContainer(IJavaProject project, IClasspathContainer container)
+            throws CoreException {
+        IClasspathEntry[] entries = container.getClasspathEntries();
+        for (int i = 0; i < entries.length; i++) {
+            IClasspathEntry entry = entries[i];
+            QualifiedName qname = new QualifiedName(container.getPath().toString(),
+                    "IClasspathEntry." + i);
+            String encodedClasspathEntry = project.encodeClasspathEntry(entry);
+            ResourcesPlugin.getWorkspace().getRoot()
+            .setPersistentProperty(qname, encodedClasspathEntry);
+        }
+    }
+
+    private AndroidClasspathContainer loadClasspathContainer(IJavaProject project,
+            IPath containerPath) {
+        AndroidClasspathContainer container = new AndroidClasspathContainer(containerPath);
+        LinkedList<IClasspathEntry> entries = new LinkedList<IClasspathEntry>();
+        IClasspathEntry entry = null;
+        int i = 0;
+        try {
+            do {
+                QualifiedName qname = new QualifiedName(container.getPath().toString(),
+                        "IClasspathEntry." + i);
+                entry = project.decodeClasspathEntry(ResourcesPlugin.getWorkspace().getRoot()
+                        .getPersistentProperty(qname));
+                if (entry != null) {
+                    entries.add(entry);
+                }
+                i++;
+            } while (entry != null);
+            if (entries.size() > 0) {
+                container.setEntries(entries.toArray(new IClasspathEntry[entries.size()]));
+            }
+        } catch (CoreException e) {
+            // We'll recreate the paths later, but manual classpath changes will
+            // be lost (like source and javadoc attachments)
+            e.printStackTrace();
+        }
+        return container;
     }
 }
