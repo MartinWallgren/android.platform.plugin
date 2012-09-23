@@ -16,6 +16,8 @@
 
 package it.wallgren.android.platform;
 
+import it.wallgren.android.platform.project.AndroidPlatformProject;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -56,10 +58,15 @@ public class AndroidClasspathContainer implements IClasspathContainer {
             if (entries == null) {
                 final List<File> libs = getAndroidDependenceisFile(repoRoot);
                 entries = new IClasspathEntry[libs.size()];
+
+                // If we set the source path to the platform project the sources will work as
+                // long as the project is open. It is not perfect, but better than nothing.
+                // TODO: We should probably find a way to look up the exact source path for each lib
+                final IPath srcPath = new Path("/" + AndroidPlatformProject.getProjectName(repoRoot));
                 int i = 0;
                 for (final File jar : libs) {
                     entries[i++] = JavaCore
-                            .newLibraryEntry(new Path(jar.getAbsolutePath()), null, null);
+                            .newLibraryEntry(new Path(jar.getAbsolutePath()), srcPath, null);
                 }
             }
             final IClasspathEntry[] out = new IClasspathEntry[entries.length];

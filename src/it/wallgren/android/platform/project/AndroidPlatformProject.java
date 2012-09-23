@@ -45,7 +45,11 @@ public class AndroidPlatformProject extends AndroidProject {
 
     public AndroidPlatformProject(IPath repoPath) {
         this.repoPath = repoPath;
-        this.projectName = repoPath.lastSegment() + "-platform";
+        this.projectName = getProjectName(repoPath);
+    }
+
+    public static String getProjectName(IPath repoPath) {
+        return repoPath.lastSegment() + "-platform";
     }
 
     @Override
