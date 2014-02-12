@@ -12,3 +12,6 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.filesystem
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
+Export-Package: it.wallgren.android.platform,
+ it.wallgren.android.platform.gui,
+ it.wallgren.android.platform.project
