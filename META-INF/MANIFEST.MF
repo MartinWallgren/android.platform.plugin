@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Android Platform Plugin
 Bundle-SymbolicName: AndroidPlatformPlugin;singleton:=true
-Bundle-Version: 1.2.0
+Bundle-Version: 1.2.1
 Bundle-Activator: it.wallgren.android.platform.Activator
 Bundle-Vendor: Martin Wallgren
 Require-Bundle: org.eclipse.ui,

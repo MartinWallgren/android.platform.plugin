@@ -82,6 +82,20 @@ public class AndroidPlatformProject extends AndroidProject {
             // This is an existing project the link already exists
             return repoLink;
         }
+
+		repoLink.createFilter(IResourceFilterDescription.INCLUDE_ONLY
+				| IResourceFilterDescription.FOLDERS,
+				new FileInfoMatcherDescription(FILE_FILTER_ID, "frameworks"),
+				0, monitor);
+		repoLink.createFilter(IResourceFilterDescription.INCLUDE_ONLY
+				| IResourceFilterDescription.FOLDERS,
+				new FileInfoMatcherDescription(FILE_FILTER_ID, "out"),
+				0, monitor);
+		repoLink.createFilter(IResourceFilterDescription.INCLUDE_ONLY
+				| IResourceFilterDescription.FOLDERS,
+				new FileInfoMatcherDescription(FILE_FILTER_ID, "libcore"),
+				0, monitor);
+
         // Let's filter out some content we don't need. To avoid it being
         // indexed
         repoLink.createFilter(IResourceFilterDescription.EXCLUDE_ALL
