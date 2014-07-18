@@ -18,18 +18,22 @@ package it.wallgren.android.platform.project;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.FileInfoMatcherDescription;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResourceFilterDescription;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
 public class PackagesProject extends AndroidProject {
@@ -70,7 +74,31 @@ public class PackagesProject extends AndroidProject {
         System.arraycopy(pkgLibs, 0, classPath, srcFolders.length, pkgLibs.length);
         classPath[classPath.length - 1] = platform;
 
-        addJavaNature(classPath, monitor);
+        addJavaNature(classPath, project, monitor);
+    }
+
+    private void addJavaNature(IClasspathEntry[] classPath, IProject project, IProgressMonitor monitor)
+            throws CoreException {
+        if (project == null) {
+            throw new IllegalStateException(
+                    "Project must be created before giving it a Java nature");
+        }
+
+        final IProjectDescription description = project.getDescription();
+        final String[] natures = description.getNatureIds();
+        final String[] newNatures = Arrays.copyOf(natures, natures.length + 1);
+        newNatures[natures.length] = JavaCore.NATURE_ID;
+        description.setNatureIds(newNatures);
+        project.setDescription(description, null);
+        final IJavaProject javaProject = JavaCore.create(project);
+        @SuppressWarnings("rawtypes")
+        final
+        Map options = javaProject.getOptions(true);
+        // Compliance level need to be 1.6
+        JavaCore.setComplianceOptions(JavaCore.VERSION_1_6, options);
+        javaProject.setOptions(options);
+        javaProject.setRawClasspath(classPath, monitor);
+        javaProject.setOutputLocation(javaProject.getPath().append("out"), monitor);
     }
 
     private IFolder createLink(IProgressMonitor monitor, IProject project, IPath repoPath)

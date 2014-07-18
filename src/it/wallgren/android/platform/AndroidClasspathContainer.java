@@ -85,6 +85,8 @@ public class AndroidClasspathContainer implements IClasspathContainer {
         final LinkedList<File> jars = new LinkedList<File>();
         findJavaLibs(repoRoot.append("/out/target/common/obj/JAVA_LIBRARIES/").toFile(), FILTER,
                 jars);
+        findJavaLibs(repoRoot.append("/out/target/common/obj/APPS/").toFile(), FILTER,
+                jars);
         return jars;
     }
 

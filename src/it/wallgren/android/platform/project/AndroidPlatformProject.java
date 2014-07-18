@@ -16,31 +16,30 @@
 
 package it.wallgren.android.platform.project;
 
-import it.wallgren.android.platform.DirectoryAnalyzer;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
 import org.eclipse.core.resources.FileInfoMatcherDescription;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResourceFilterDescription;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Map;
 
 public class AndroidPlatformProject extends AndroidProject {
     private static String FILE_FILTER_ID = "org.eclipse.ui.ide.patternFilterMatcher";
+    private static final String[] BROKEN_CLASSPATH_ENTRIES = new String[]{"frameworks/ex/carousel/java"};
 
     private final IPath repoPath;
+
     private final String projectName;
 
     public AndroidPlatformProject(IPath repoPath) {
@@ -65,14 +64,83 @@ public class AndroidPlatformProject extends AndroidProject {
     @Override
     public void doCreate(IProgressMonitor monitor) throws CoreException {
         final IProject project = createProject(projectName, monitor);
+        addJavaNature(project, monitor);
+    }
 
+    private void addJavaNature(IProject project, IProgressMonitor monitor) throws CoreException {
+        if (project == null) {
+            throw new IllegalStateException(
+                    "Project must be created before giving it a Java nature");
+        }
         final IFolder repoLink = createRepoLink(monitor, project, repoPath);
+        IFile classpath = repoLink.getFile("development/ide/eclipse/.classpath");
+        IFile classpathDestination = project.getFile(".classpath");
+        if (classpathDestination.exists()) {
+            classpathDestination.delete(true, monitor);
+        }
+        classpath.copy(classpathDestination.getFullPath(), true, monitor);
+        final IProjectDescription description = project.getDescription();
+        final String[] natures = description.getNatureIds();
+        final String[] newNatures = Arrays.copyOf(natures, natures.length + 1);
+        newNatures[natures.length] = JavaCore.NATURE_ID;
+        description.setNatureIds(newNatures);
+        project.setDescription(description, null);
+        final IJavaProject javaProject = JavaCore.create(project);
+        @SuppressWarnings("rawtypes")
+        final Map options = javaProject.getOptions(true);
+        // Compliance level need to be 1.6
+        JavaCore.setComplianceOptions(JavaCore.VERSION_1_6, options);
+        javaProject.setOptions(options);
 
-        final IClasspathEntry[] srcFolders = getSourceFolders(project, repoLink, monitor);
-        final IClasspathEntry[] classPath = new IClasspathEntry[srcFolders.length + 1];
-        System.arraycopy(srcFolders, 0, classPath, 0, srcFolders.length);
-        classPath[srcFolders.length] = getAndroidDependenceis(repoPath);
-        addJavaNature(classPath, monitor);
+        IClasspathEntry[] classPath = mangleClasspath(javaProject.getRawClasspath(), project,
+                repoLink);
+        javaProject.setRawClasspath(classPath, monitor);
+        javaProject.setOutputLocation(javaProject.getPath().append("out"), monitor);
+    }
+
+    private IClasspathEntry[] mangleClasspath(IClasspathEntry[] rawClasspath, IProject project,
+            IFolder repoLink) {
+        LinkedList<IClasspathEntry> entries = new LinkedList<IClasspathEntry>();
+
+        // Filter out anything that is not framworks, packages, libcore or R
+        IFile frameworks = project.getFile("frameworks");
+        IFile packages = project.getFile("packages");
+        IFile libcore = project.getFile("libcore");
+        for (IClasspathEntry entry : rawClasspath) {
+            if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+                // is frameworks source folder or R source folder
+                if (frameworks.getFullPath().isPrefixOf(entry.getPath())
+                        || libcore.getFullPath().isPrefixOf(entry.getPath())
+                        || packages.getFullPath().isPrefixOf(entry.getPath())
+                        || entry.getPath().lastSegment().equals("R")) {
+                    IPath path = entry.getPath().removeFirstSegments(1);
+                    IFolder entryFolder = repoLink.getFolder(path);
+                    if (!isBroken(entryFolder)) {
+                        entries.add(JavaCore.newSourceEntry(entryFolder.getFullPath()));
+                    }
+                }
+            }
+        }
+
+        // Add the special platform libs container
+        entries.add(getAndroidDependenceis(repoPath));
+        return entries.toArray(new IClasspathEntry[0]);
+    }
+
+    /**
+     * Returns true if the classpath entry is non existant or have an
+     * compile/build error
+     *
+     * @param classpathEntry
+     * @return
+     */
+    private boolean isBroken(IFolder classpathEntry) {
+        for (String src : BROKEN_CLASSPATH_ENTRIES) {
+            if (classpathEntry.getFullPath().toString().endsWith(src)) {
+                return true;
+            }
+        }
+        return !classpathEntry.exists();
     }
 
     private IFolder createRepoLink(IProgressMonitor monitor, IProject project, IPath repoPath)
@@ -83,18 +151,18 @@ public class AndroidPlatformProject extends AndroidProject {
             return repoLink;
         }
 
-		repoLink.createFilter(IResourceFilterDescription.INCLUDE_ONLY
-				| IResourceFilterDescription.FOLDERS,
-				new FileInfoMatcherDescription(FILE_FILTER_ID, "frameworks"),
-				0, monitor);
-		repoLink.createFilter(IResourceFilterDescription.INCLUDE_ONLY
-				| IResourceFilterDescription.FOLDERS,
-				new FileInfoMatcherDescription(FILE_FILTER_ID, "out"),
-				0, monitor);
-		repoLink.createFilter(IResourceFilterDescription.INCLUDE_ONLY
-				| IResourceFilterDescription.FOLDERS,
-				new FileInfoMatcherDescription(FILE_FILTER_ID, "libcore"),
-				0, monitor);
+        // List of root folders we want to keep, all else is hidden. This is for
+        // performance reasons. Indexing the entire Android repo is expensive as
+        // shit
+        String[] resources = new String[] {
+                "frameworks", "out", "libcore", "development"
+        };
+
+        for (String res : resources) {
+            repoLink.createFilter(IResourceFilterDescription.INCLUDE_ONLY
+                    | IResourceFilterDescription.FOLDERS, new FileInfoMatcherDescription(
+                    FILE_FILTER_ID, res), 0, monitor);
+        }
 
         // Let's filter out some content we don't need. To avoid it being
         // indexed
@@ -103,7 +171,7 @@ public class AndroidPlatformProject extends AndroidProject {
                 new FileInfoMatcherDescription(FILE_FILTER_ID, "bin"), 0, monitor);
         repoLink.createFilter(IResourceFilterDescription.EXCLUDE_ALL
                 | IResourceFilterDescription.FOLDERS, new FileInfoMatcherDescription(
-                        FILE_FILTER_ID, ".repo"), 0, monitor);
+                FILE_FILTER_ID, ".repo"), 0, monitor);
         repoLink.createFilter(IResourceFilterDescription.EXCLUDE_ALL
                 | IResourceFilterDescription.FOLDERS | IResourceFilterDescription.INHERITABLE,
                 new FileInfoMatcherDescription(FILE_FILTER_ID, ".git"), 0, monitor);
@@ -133,48 +201,6 @@ public class AndroidPlatformProject extends AndroidProject {
         return JavaCore.newContainerEntry(new Path(
                 "it.wallgren.android.platform.classpathContainerInitializer"
                         + repoPath.makeAbsolute()));
-    }
-
-    private IClasspathEntry[] getSourceFolders(IProject project, IFolder repoLink,
-            IProgressMonitor monitor) throws CoreException {
-        final List<IPath> files = getJavaSourceFolders(repoLink);
-        final LinkedList<IClasspathEntry> entries = new LinkedList<IClasspathEntry>();
-        for (final IPath folder : files) {
-            if (folder.toString().contains("tools") || folder.toString().contains("tests")) {
-                // Ugly hack to skip tools and test folders
-                continue;
-            }
-            entries.add(JavaCore.newSourceEntry(folder));
-        }
-        return entries.toArray(new IClasspathEntry[0]);
-    }
-
-    private List<IPath> getJavaSourceFolders(IFolder repoLink) {
-        final List<IPath> srcFolders = new LinkedList<IPath>();
-        final DirectoryAnalyzer da = new DirectoryAnalyzer(new File(repoLink.getRawLocation().toFile(),
-                "frameworks/base"));
-        try {
-            final Set<File> javaSources = da.findJavaSourceDirectories();
-            final int startPos = repoPath.toOSString().length();
-            for (final File file : javaSources) {
-                final IPath path = repoLink.getFullPath().append(
-                        file.getAbsolutePath().substring(startPos));
-                srcFolders.add(path);
-            }
-        } catch (final IOException e) {
-            e.printStackTrace();
-        }
-        srcFolders.add(repoLink.getFullPath().append("libcore/luni/src/main/java"));
-        srcFolders.add(repoLink.getFullPath().append("out/target/common/R"));
-        Collections.sort(srcFolders, new Comparator<IPath>() {
-
-            @Override
-            public int compare(IPath o1, IPath o2) {
-                // Sort the source folder list.
-                return o1.toString().compareTo(o2.toString());
-            }
-        });
-        return srcFolders;
     }
 
     @Override
